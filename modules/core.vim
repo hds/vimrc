@@ -6,6 +6,9 @@ colorscheme jellybeans
 " Always display cursor position
 set ruler
 
+" Make backspace work normally
+set backspace=indent,eol,start
+
 " 4 spaces for tabs
 set tabstop=4
 set shiftwidth=4
