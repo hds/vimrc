@@ -7,3 +7,4 @@ endfunction
 for file in split(glob(Dot('modules/*.vim')), '\n')
     execute 'source' file
 endfor
+
