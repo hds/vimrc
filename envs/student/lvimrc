@@ -1,0 +1,4 @@
+
+" Set YCM conf script
+let g:ycm_global_ycm_extra_conf = g:localvimrc_script_dir . "/.ycm.py"
+
