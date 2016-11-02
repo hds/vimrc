@@ -6,3 +6,6 @@ noremap \ :set invpaste paste?<CR>
 " Use Ctrl modifier to move up/down pages on the up (J) and down (K) keys.
 noremap <C-J> <PageDown>
 noremap <C-K> <PageUp>
+
+" Use `p` in visual mode to paste without copying selected text
+xnoremap p "_dP

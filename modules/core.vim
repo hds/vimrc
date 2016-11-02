@@ -21,4 +21,6 @@ set autoindent
 " Search highlighting
 set hlsearch
 
-
+" More natural split opening
+set splitbelow
+set splitright
