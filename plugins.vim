@@ -10,6 +10,7 @@ Plug 'scrooloose/nerdtree'
 Plug 'mileszs/ack.vim'
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer' }
 Plug 'embear/vim-localvimrc'
+Plug 'tpope/vim-fugitive'
 
 " Currently disabled
 "Plug 'tpope/vim-vinegar'
