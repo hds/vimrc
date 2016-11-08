@@ -13,3 +13,21 @@ begin you'll need to install the plugins by running (from within Vim):
     :PlugInstall
 
 That should be everything.
+
+## Building Vim from source
+
+Let's build Vim 8 from source since it doesn't come preinstall on macOS. These instructions are adapted from a page on the [YouCompleteMe Wiki](https://github.com/Valloric/YouCompleteMe/wiki/Building-Vim-from-source).
+
+    ./configure --with-features=huge \
+                --enable-multibyte \
+                --enable-rubyinterp=yes \
+                --enable-pythoninterp=yes \
+                --with-python-config-dir=/usr/lib/python2.7/config \
+                --enable-perlinterp=yes \
+                --enable-luainterp=yes \
+                --enable-cscope \
+                --prefix=/usr/local
+    make VIMRUNTIMEDIR=/usr/local/share/vim/vim80
+    sudo make install
+
+Then make sure that `/usr/local/bin` appears before `/usr/bin` in your `PATH` environment variable.
