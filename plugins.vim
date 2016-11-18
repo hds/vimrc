@@ -38,3 +38,6 @@ Plug 'vim-scripts/JavaScript-Indent'
 Plug 'helino/vim-json'
 Plug 'mxw/vim-jsx'
 
+" Trialing
+Plug 'kana/vim-operator-user'
+Plug 'rhysd/vim-clang-format'
