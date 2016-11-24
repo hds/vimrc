@@ -4,6 +4,9 @@ let &makeprg="cd " . g:localvimrc_script_dir_unresolved . "/../build/sdkdoc;" . 
 let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
 let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/sdkdoc"
 
+" Ack command (change searched file extensions)
+let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|txt\|json\|md\|dox)$"'
+
 " Set YCM conf script
 let g:ycm_global_ycm_extra_conf = g:localvimrc_script_dir_unresolved . "/.ycm.py"
 
