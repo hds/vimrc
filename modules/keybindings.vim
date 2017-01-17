@@ -7,5 +7,8 @@ noremap \ :set invpaste paste?<CR>
 noremap <C-J> <PageDown>
 noremap <C-K> <PageUp>
 
+nnoremap <C-U> :cprev<CR>
+nnoremap <C-D> :cnext<CR>
+
 " Use `p` in visual mode to paste without copying selected text
 xnoremap p "_dP
