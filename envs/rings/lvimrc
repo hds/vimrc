@@ -1,0 +1,74 @@
+
+" Set YCM conf script
+let g:ycm_global_ycm_extra_conf = g:localvimrc_script_dir_unresolved . "/.ycm.py"
+
+" All HERE code uses 100 character lines
+set colorcolumn=100
+
+let g:clang_format#command = "clang-format-3.5"
+
+command! FormatInt !./mib2plus-integration/scripts/format-code.sh "%:p"
+"echom 'path: ' . expand('%:p')
+command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
+
+let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
+let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/v-ninja"
+
+" Build for linux
+set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+
+let g:hds_last_build = ""
+let g:hds_last_test = ""
+
+function! Build(targets, use_last)
+    if !a:use_last
+        if a:targets == ""
+            echom "No target specified!"
+            return
+        endif
+        let g:hds_last_build = a:targets
+    endif
+    if g:hds_last_build != ""
+        execute "Make " . g:hds_last_build
+    else
+        echom "No last target specified!"
+    endif
+endfunction
+
+let g:hds_test_dirs = { "HereNaviNavMemoryIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/navmemory", "HereNaviUnitTests": g:hds_build_dir . "/mib2plus-integration/tests/unittests", "carlo_sdl_unit_tests": g:hds_build_dir . "/auto-core-sdk/sdk_extensions/tests/unit", }
+
+function! Test(args, use_last)
+    if !a:use_last
+        if len(a:args) == 0
+            echom "No test specified!"
+            return
+        endif
+        let g:hds_last_test = a:args
+    endif
+
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+
+    let l:args_array = split(g:hds_last_test)
+    let l:test = l:args_array[0]
+    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+    let l:cmd = "Dispatch "
+    if has_key(g:hds_test_dirs, l:test)
+        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+    endif
+    let l:cmd = l:cmd . "./" . l:test
+    if len(l:filter) > 0
+        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+    endif
+    execute l:cmd
+endfunction
+
+command! -nargs=*   Build       call Build(<q-args>, 0)
+command!            BuildLast   call Build(<q-args>, 1)
+command! -nargs=*   Test        call Test(<q-args>, 0)
+command!            TestLast    call Test(<q-args>, 1)
+
+nnoremap <F4> :BuildLast<CR>
+nnoremap <F5> :TestLast<CR>
