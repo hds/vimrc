@@ -1,6 +1,6 @@
 
 if executable('ag')
-    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|py\|txt\|json)$"'
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|json)$"'
 endif
 let g:ackhighlight = 1
 "let g:ack_use_dispatch = 1

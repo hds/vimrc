@@ -17,9 +17,6 @@ let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/v-ninja"
 " Build for linux
 set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
 
-let g:hds_last_build = ""
-let g:hds_last_test = ""
-
 function! Build(targets, use_last)
     if !a:use_last
         if a:targets == ""
