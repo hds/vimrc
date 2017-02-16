@@ -6,3 +6,5 @@ let g:ycm_server_keep_logfiles = 1
 let g:ycm_server_log_level = 'debug'
 
 noremap <C-L> :YcmCompleter GoTo<CR>
+nnoremap gl :YcmCompleter GoTo<CR>
+nnoremap gd :YcmCompleter GetDoc<CR>

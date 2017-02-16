@@ -1,6 +1,10 @@
 
+let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
+let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/v-ninja"
+
 " Set YCM conf script
-let g:ycm_global_ycm_extra_conf = g:localvimrc_script_dir_unresolved . "/.ycm.py"
+let g:ycm_global_ycm_extra_conf = g:hds_repo_dir . "/.ycm.py"
+let g:ycm_autoclose_preview_window_after_completion = 0
 
 " All HERE code uses 100 character lines
 set colorcolumn=100
@@ -10,9 +14,6 @@ let g:clang_format#command = "clang-format-3.5"
 command! FormatInt !./mib2plus-integration/scripts/format-code.sh "%:p"
 "echom 'path: ' . expand('%:p')
 command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
-
-let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
-let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/v-ninja"
 
 " Build for linux
 set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1

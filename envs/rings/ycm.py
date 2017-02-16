@@ -94,7 +94,7 @@ flags = [
 #
 # Most projects will NOT need to set this to anything; you can just change the
 # 'flags' list of compilation flags. Notice that YCM itself uses that approach.
-compilation_database_folder = '/home/olympia/olympia/build/v-ninja-linux'
+compilation_database_folder = '/home/olympia/olympia/build/v-ninja'
 
 if os.path.exists( compilation_database_folder ):
   database = ycm_core.CompilationDatabase( compilation_database_folder )
@@ -138,7 +138,7 @@ def MakeRelativePathsInFlagsAbsolute( flags, working_directory ):
 
 def IsHeaderFile( filename ):
   extension = os.path.splitext( filename )[ 1 ]
-  return extension in [ '.h', '.hxx', '.hpp', '.hh' ]
+  return extension in [ '.h', '.hxx', '.hpp', '.hh', '.inl' ]
 
 
 def GetCompilationInfoForFile( filename ):
@@ -174,10 +174,10 @@ def FlagsForFile( filename, **kwargs ):
     # NOTE: This is just for YouCompleteMe; it's highly likely that your project
     # does NOT need to remove the stdlib flag. DO NOT USE THIS IN YOUR
     # ycm_extra_conf IF YOU'RE NOT 100% SURE YOU NEED IT.
-    try:
-      final_flags.remove( '-stdlib=libc++' )
-    except ValueError:
-      pass
+    #try:
+    #  final_flags.remove( '-stdlib=libc++' )
+    #except ValueError:
+    #  pass
   else:
     relative_to = DirectoryOfThisScript()
     final_flags = MakeRelativePathsInFlagsAbsolute( flags, relative_to )
