@@ -17,6 +17,12 @@ command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
 
 " Build for linux
 set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+let g:hds_build_cmd = "cmake-build.sh --target=linux --ninja --jobs=64 --repo=${HOME}/olympia/repo --build=${HOME}/olympia/build/v-ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+
+function! BuildCmd(args)
+    let l:cmd = g:hds_build_cmd . " " . a:args
+    return l:cmd
+endfunction
 
 function! Build(targets, use_last)
     if !a:use_last
@@ -26,14 +32,40 @@ function! Build(targets, use_last)
         endif
         let g:hds_last_build = a:targets
     endif
-    if g:hds_last_build != ""
-        execute "Make " . g:hds_last_build
-    else
-        echom "No last target specified!"
+
+    if len(g:hds_last_build) == 0
+        echom "No last build found!"
+        return
     endif
+
+    let l:cmd = BuildCmd(g:hds_last_build)
+    execute "Dispatch " . l:cmd
 endfunction
 
-let g:hds_test_dirs = { "HereNaviNavMemoryIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/navmemory", "HereNaviUnitTests": g:hds_build_dir . "/mib2plus-integration/tests/unittests", "carlo_sdl_unit_tests": g:hds_build_dir . "/auto-core-sdk/sdk_extensions/tests/unit", }
+let g:hds_test_dirs =
+\{
+\    "HereNaviNavMemoryIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/navmemory",
+\    "HereNaviSearchIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/search",
+\    "HereNaviSystemIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/system",
+\    "HereNaviUnitTests": g:hds_build_dir . "/mib2plus-integration/tests/unittests",
+\    "carlo_sdl_unit_tests": g:hds_build_dir . "/auto-core-sdk/sdk_extensions/tests/unit",
+\}
+
+function! TestCmd(args)
+    let l:args_array = split(a:args)
+    let l:test = l:args_array[0]
+    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+    let l:cmd = ""
+    if has_key(g:hds_test_dirs, l:test)
+        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+    endif
+    let l:cmd = l:cmd . "./" . l:test
+    if len(l:filter) > 0
+        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+    endif
+
+    return l:cmd
+endfunction
 
 function! Test(args, use_last)
     if !a:use_last
@@ -49,24 +81,42 @@ function! Test(args, use_last)
         return
     endif
 
-    let l:args_array = split(g:hds_last_test)
-    let l:test = l:args_array[0]
-    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
-    let l:cmd = "Dispatch "
-    if has_key(g:hds_test_dirs, l:test)
-        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
-    endif
-    let l:cmd = l:cmd . "./" . l:test
-    if len(l:filter) > 0
-        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
-    endif
-    execute l:cmd
+    let l:cmd = TestCmd(g:hds_last_test)
+"    let l:args_array = split(g:hds_last_test)
+"    let l:test = l:args_array[0]
+"    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+"    let l:cmd = "Dispatch "
+"    if has_key(g:hds_test_dirs, l:test)
+"        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+"    endif
+"    let l:cmd = l:cmd . "./" . l:test
+"    if len(l:filter) > 0
+"        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+"    endif
+    execute "Dispatch " . l:cmd
 endfunction
 
-command! -nargs=*   Build       call Build(<q-args>, 0)
-command!            BuildLast   call Build(<q-args>, 1)
-command! -nargs=*   Test        call Test(<q-args>, 0)
-command!            TestLast    call Test(<q-args>, 1)
+function! BuildAndTest()
+    if len(g:hds_last_build) == 0
+        echom "No last build found!"
+        return
+    endif
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+    let l:build_cmd = BuildCmd(g:hds_last_build)
+    let l:test_cmd = TestCmd(g:hds_last_test)
+
+    execute "Dispatch " . l:build_cmd . " && " . l:test_cmd
+endfunction
+
+command! -nargs=*   Build        call Build(<q-args>, 0)
+command!            BuildLast    call Build(<q-args>, 1)
+command! -nargs=*   Test         call Test(<q-args>, 0)
+command!            TestLast     call Test(<q-args>, 1)
+command!            BuildAndTest call BuildAndTest()
 
 nnoremap <F4> :BuildLast<CR>
 nnoremap <F5> :TestLast<CR>
+nnoremap <F6> :BuildAndTest<CR>
