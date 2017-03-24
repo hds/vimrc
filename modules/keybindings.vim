@@ -12,3 +12,5 @@ nnoremap <C-D> :cnext<CR>
 
 " Use `p` in visual mode to paste without copying selected text
 xnoremap p "_dP
+
+let mapleader = "\<Space>"

@@ -18,6 +18,9 @@ Plug 'mileszs/ack.vim'
 " Completion and jump to definitions (build for C and JS)
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --tern-completer' }
 
+" Find usage and other jump to definition (for C/C++ only)
+Plug 'lyuts/vim-rtags'
+
 " Simple file tree
 Plug 'tpope/vim-vinegar'
 
@@ -41,3 +44,8 @@ Plug 'mxw/vim-jsx'
 " Trialing
 Plug 'kana/vim-operator-user'
 Plug 'rhysd/vim-clang-format'
+
+"Plug 'tpope/vim-commentary'
+Plug 'tomtom/tcomment_vim'
+
+"Plug 'lldb/vim-lldb'

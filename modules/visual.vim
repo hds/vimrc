@@ -6,3 +6,5 @@ augroup CursorLineOnlyInActiveWindow
   autocmd WinLeave * setlocal nocursorline
 augroup END
 
+set nocursorline
+setlocal nocursorline
