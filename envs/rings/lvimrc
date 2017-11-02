@@ -11,13 +11,17 @@ set colorcolumn=100
 
 let g:clang_format#command = "clang-format-3.5"
 
+if executable('ag')
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|json)$"'
+endif
+
 command! FormatInt !./mib2plus-integration/scripts/format-code.sh "%:p"
 "echom 'path: ' . expand('%:p')
 command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
 
 " Build for linux
-set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-let g:hds_build_cmd = "cmake-build.sh --target=linux --ninja --jobs=64 --repo=${HOME}/olympia/repo --build=${HOME}/olympia/build/v-ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+set makeprg=cmake-build.sh\ --target=mib2p-x86\ --ninja\ --jobs=128\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ --static\ --debug\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+let g:hds_build_cmd = "cmake-build.sh --target=mib2p-x86 --ninja --jobs=128 --repo=${HOME}/olympia/repo --build=${HOME}/olympia/build/v-ninja --static --debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
 
 function! BuildCmd(args)
     let l:cmd = g:hds_build_cmd . " " . a:args
