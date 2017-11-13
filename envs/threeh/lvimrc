@@ -1,0 +1,126 @@
+
+let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
+let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/sparta-x86"
+
+" Set YCM conf script
+let g:ycm_global_ycm_extra_conf = g:hds_repo_dir . "/.ycm.py"
+let g:ycm_autoclose_preview_window_after_completion = 0
+
+" All HERE code uses 100 character lines
+set colorcolumn=100
+
+"let g:clang_format#command = "clang-format-3.5"
+
+if executable('ag')
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|json)$"'
+endif
+
+"command! FormatInt !./mib2plus-integration/scripts/format-code.sh "%:p"
+"echom 'path: ' . expand('%:p')
+"command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
+
+" Build for linux
+set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+let g:hds_build_cmd = "sparta-build.sh --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DENABLE_OPENGLES3=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+
+function! BuildCmd(args)
+    let l:cmd = g:hds_build_cmd . " " . a:args
+    return l:cmd
+endfunction
+
+function! Build(targets, use_last)
+    if !a:use_last
+        if a:targets == ""
+            echom "No target specified!"
+            return
+        endif
+        let g:hds_last_build = a:targets
+    endif
+
+    if len(g:hds_last_build) == 0
+        echom "No last build found!"
+        return
+    endif
+
+    let l:cmd = BuildCmd(g:hds_last_build)
+    execute "Dispatch " . l:cmd
+endfunction
+
+let g:hds_test_dirs =
+\{
+\    "HereNaviNavMemoryIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/navmemory",
+\    "HereNaviSearchIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/search",
+\    "HereNaviSystemIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/system",
+\    "HereNaviUnitTests": g:hds_build_dir . "/mib2plus-integration/tests/unittests",
+\    "carlo_sdl_unit_tests": g:hds_build_dir . "/auto-core-sdk/sdk_extensions/tests/unit",
+\}
+
+function! TestCmd(args)
+    let l:args_array = split(a:args)
+    let l:test = l:args_array[0]
+    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+    let l:cmd = ""
+    if has_key(g:hds_test_dirs, l:test)
+        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+    endif
+    let l:cmd = l:cmd . "./" . l:test
+    if len(l:filter) > 0
+        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+    endif
+
+    return l:cmd
+endfunction
+
+function! Test(args, use_last)
+    if !a:use_last
+        if len(a:args) == 0
+            echom "No test specified!"
+            return
+        endif
+        let g:hds_last_test = a:args
+    endif
+
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+
+    let l:cmd = TestCmd(g:hds_last_test)
+"    let l:args_array = split(g:hds_last_test)
+"    let l:test = l:args_array[0]
+"    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+"    let l:cmd = "Dispatch "
+"    if has_key(g:hds_test_dirs, l:test)
+"        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+"    endif
+"    let l:cmd = l:cmd . "./" . l:test
+"    if len(l:filter) > 0
+"        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+"    endif
+    execute "Dispatch " . l:cmd
+endfunction
+
+function! BuildAndTest()
+    if len(g:hds_last_build) == 0
+        echom "No last build found!"
+        return
+    endif
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+    let l:build_cmd = BuildCmd(g:hds_last_build)
+    let l:test_cmd = TestCmd(g:hds_last_test)
+
+    execute "Dispatch " . l:build_cmd . " && " . l:test_cmd
+endfunction
+
+command! -nargs=*   Build        call Build(<q-args>, 0)
+command!            BuildLast    call Build(<q-args>, 1)
+command! -nargs=*   Test         call Test(<q-args>, 0)
+command!            TestLast     call Test(<q-args>, 1)
+command!            BuildAndTest call BuildAndTest()
+
+nnoremap <F4> :BuildLast<CR>
+nnoremap <F5> :TestLast<CR>
+nnoremap <F6> :BuildAndTest<CR>

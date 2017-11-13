@@ -38,7 +38,7 @@ Plug 'ntpeters/vim-better-whitespace'
 Plug 'pangloss/vim-javascript'
 Plug 'jelera/vim-javascript-syntax'
 Plug 'vim-scripts/JavaScript-Indent'
-Plug 'helino/vim-json'
+"Plug 'helino/vim-json'
 Plug 'mxw/vim-jsx'
 
 " Trialing
