@@ -1,0 +1,19 @@
+
+let &makeprg="cd " . g:localvimrc_script_dir_unresolved . "/../build/sdkdoc;" . "ninja"
+
+let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
+let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/sdkdoc"
+
+" Ack command (change searched file extensions)
+let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|txt\|json\|md\|dox)$"'
+
+" Set YCM conf script
+let g:ycm_global_ycm_extra_conf = g:localvimrc_script_dir_unresolved . "/.ycm.py"
+
+set colorcolumn=100
+
+command! BuildDocs execute 'Dispatch touch ' . g:hds_repo_dir . '/auto-core-sdk/doc/Doxyfile.in && cd ' . g:hds_repo_dir . "/../build/sdkdoc;" . "ninja sdkdoc"
+nnoremap <F4> :BuildDocs<CR>
+
+command! BuildExample Make carlo_sdl_example_defaultstores
+nnoremap <F5> :BuildExample<CR>
