@@ -9,7 +9,7 @@ let g:ycm_autoclose_preview_window_after_completion = 0
 " All HERE code uses 100 character lines
 set colorcolumn=100
 
-"let g:clang_format#command = "clang-format-3.5"
+let g:clang_format#command = "clang-format-3.9"
 
 if executable('ag')
     let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|json)$"'
@@ -46,13 +46,19 @@ function! Build(targets, use_last)
     execute "Dispatch " . l:cmd
 endfunction
 
+let g:hds_mib3_integrationtest_dir = g:hds_build_dir . "/mib3t/integration/tests/integrationtests"
+let g:hds_mib3_unittest_dir = g:hds_build_dir . "/mib3t/integration/tests/unittests"
+let g:hds_corenav_test_dir = g:hds_build_dir . "/preinstall-image/share/here/tests"
+
 let g:hds_test_dirs =
 \{
-\    "HereNaviNavMemoryIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/navmemory",
-\    "HereNaviSearchIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/search",
-\    "HereNaviSystemIntegrationTests": g:hds_build_dir . "/mib2plus-integration/tests/integrationtests/system",
-\    "HereNaviUnitTests": g:hds_build_dir . "/mib2plus-integration/tests/unittests",
-\    "carlo_sdl_unit_tests": g:hds_build_dir . "/auto-core-sdk/sdk_extensions/tests/unit",
+\    "HereNaviNavMemoryIntegrationTests": g:hds_mib3_integrationtest_dir . "/navmemory",
+\    "HereNaviNavMemoryUnitTests": g:hds_mib3_unittest_dir . "/navmemory",
+\    "HereNaviSearchIntegrationTests": g:hds_mib3_integrationtest_dir . "/search",
+\    "HereNaviSearchUnitTests": g:hds_mib3_unittest_dir . "/search",
+\    "HereNaviUnitTests": g:hds_mib3_unittest_dir,
+\    "sync.functionaltests": g:hds_corenav_test_dir,
+\    "sync.unittests": g:hds_corenav_test_dir
 \}
 
 function! TestCmd(args)
