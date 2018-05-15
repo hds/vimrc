@@ -34,6 +34,9 @@ Plug 'tpope/vim-fugitive'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'ntpeters/vim-better-whitespace'
 
+" Language plugins
+Plug 'zchee/vim-flatbuffers'
+
 " Javascript
 Plug 'pangloss/vim-javascript'
 Plug 'jelera/vim-javascript-syntax'
@@ -47,5 +50,3 @@ Plug 'rhysd/vim-clang-format'
 
 "Plug 'tpope/vim-commentary'
 Plug 'tomtom/tcomment_vim'
-
-"Plug 'lldb/vim-lldb'

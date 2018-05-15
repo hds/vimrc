@@ -1,10 +1,16 @@
 
+" Encoding
+set encoding=utf-8
+
 " Syntax highlighting on.
 syntax on
 colorscheme jellybeans
 
 " Always display cursor position
 set ruler
+
+" Always display status line
+set laststatus=2
 
 " Make backspace work normally
 set backspace=indent,eol,start
