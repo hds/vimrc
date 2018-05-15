@@ -9,19 +9,28 @@ let g:ycm_autoclose_preview_window_after_completion = 0
 " All HERE code uses 100 character lines
 set colorcolumn=100
 
-let g:clang_format#command = "clang-format-3.9"
+let g:clang_format#command = "clang-format-5.0"
 
 if executable('ag')
-    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|json)$"'
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|sources\|json)$"'
 endif
 
-"command! FormatInt !./mib2plus-integration/scripts/format-code.sh "%:p"
-"echom 'path: ' . expand('%:p')
-"command! FormatCarlo !./mib2plus-integration/scripts/format-code-carlo.sh "%:p"
+let $LD_LIBRARY_PATH = $LD_LIBRARY_PATH . ":" . $HOME . "/tmp/navigation/lib"
+let $PYTHONPATH = $HOME . "/tmp/lib/python2.7/dist-packages/here/navigation/navmemory"
 
 " Build for linux
-set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-let g:hds_build_cmd = "sparta-build.sh --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DENABLE_OPENGLES3=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+"set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+let g:hds_build_cmd = "sparta-build.sh --debug --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DENABLE_OPENGLES3=OFF -DNAVMEMORY_WRAPPER_MODULE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+
+function! CmakeCmd(args)
+    let l:cmd = g:hds_build_cmd . " --cmake-only " . a:args
+    return l:cmd
+endfunction
+
+function! Cmake(args)
+    let l:cmd = CmakeCmd(a:args)
+    execute "Dispatch " . l:cmd
+endfunction
 
 function! BuildCmd(args)
     let l:cmd = g:hds_build_cmd . " " . a:args
@@ -49,6 +58,7 @@ endfunction
 let g:hds_mib3_integrationtest_dir = g:hds_build_dir . "/mib3t/integration/tests/integrationtests"
 let g:hds_mib3_unittest_dir = g:hds_build_dir . "/mib3t/integration/tests/unittests"
 let g:hds_corenav_test_dir = g:hds_build_dir . "/preinstall-image/share/here/tests"
+let g:hds_carlo_test_dir = g:hds_build_dir . "/coresdk/carlo/locationsdk/test"
 
 let g:hds_test_dirs =
 \{
@@ -58,8 +68,31 @@ let g:hds_test_dirs =
 \    "HereNaviSearchUnitTests": g:hds_mib3_unittest_dir . "/search",
 \    "HereNaviUnitTests": g:hds_mib3_unittest_dir,
 \    "sync.functionaltests": g:hds_corenav_test_dir,
-\    "sync.unittests": g:hds_corenav_test_dir
+\    "sync.functional-sync-tests": g:hds_corenav_test_dir,
+\    "sync.unittests": g:hds_corenav_test_dir,
+\    "carlo_unit_profile": g:hds_carlo_test_dir . "/unit",
 \}
+
+function! ListTargets(arg_lead, cmd_line, cursor_pos)
+    let l:cmd = "cd " . g:hds_build_dir . " && " . "ninja -t targets all | grep -v '/' | awk -F: '{print $1}'"
+    return system(l:cmd)
+endfunction
+
+function! ListKnownTargets(arg_lead, cmd_line, cursor_pos)
+    return join(keys(g:hds_test_dirs), "\n")
+endfunction
+
+function! ListKnownTestTargets(arg_lead, cmd_line, cursor_pos)
+    let l:first_part = strpart(a:cmd_line, 0, a:cursor_pos)
+    let l:left_parts = split(l:first_part)
+    let l:last_char = strpart(a:cmd_line, a:cursor_pos-1, 1)
+
+    if len(l:left_parts) <= 2 && l:last_char != " "
+        return ListKnownTargets(a:arg_lead, a:cmd_line, a:cursor_pos)
+    else
+        return "mog\ngom"
+    endif
+endfunction
 
 function! TestCmd(args)
     let l:args_array = split(a:args)
@@ -121,12 +154,15 @@ function! BuildAndTest()
     execute "Dispatch " . l:build_cmd . " && " . l:test_cmd
 endfunction
 
-command! -nargs=*   Build        call Build(<q-args>, 0)
+command! -nargs=*   Cmake        call Cmake(<q-args>)
+command!            CmakeLast    call Cmake("")
+command! -complete=custom,ListKnownTargets -nargs=*   Build        call Build(<q-args>, 0)
 command!            BuildLast    call Build(<q-args>, 1)
-command! -nargs=*   Test         call Test(<q-args>, 0)
+command! -complete=custom,ListKnownTestTargets -nargs=*   Test         call Test(<q-args>, 0)
 command!            TestLast     call Test(<q-args>, 1)
 command!            BuildAndTest call BuildAndTest()
 
+nnoremap <F3> :CmakeLast<CR>
 nnoremap <F4> :BuildLast<CR>
 nnoremap <F5> :TestLast<CR>
 nnoremap <F6> :BuildAndTest<CR>
