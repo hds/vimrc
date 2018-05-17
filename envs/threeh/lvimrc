@@ -60,12 +60,21 @@ let g:hds_mib3_unittest_dir = g:hds_build_dir . "/mib3t/integration/tests/unitte
 let g:hds_corenav_test_dir = g:hds_build_dir . "/preinstall-image/share/here/tests"
 let g:hds_carlo_test_dir = g:hds_build_dir . "/coresdk/carlo/locationsdk/test"
 
+let g:hds_build_only_targets =
+\[
+\   "install_navigation",
+\   "install_test_navigation_wrapper_navmemory_component",
+\   "install-here.mib3t-integration-nav-memory-wrapper",
+\]
+
 let g:hds_test_dirs =
 \{
 \    "HereNaviNavMemoryIntegrationTests": g:hds_mib3_integrationtest_dir . "/navmemory",
 \    "HereNaviNavMemoryUnitTests": g:hds_mib3_unittest_dir . "/navmemory",
 \    "HereNaviSearchIntegrationTests": g:hds_mib3_integrationtest_dir . "/search",
 \    "HereNaviSearchUnitTests": g:hds_mib3_unittest_dir . "/search",
+\    "HereNaviSystemIntegrationTests": g:hds_mib3_integrationtest_dir . "/system",
+\    "HereNaviSystemUnitTests": g:hds_mib3_unittest_dir . "/system",
 \    "HereNaviUnitTests": g:hds_mib3_unittest_dir,
 \    "sync.functionaltests": g:hds_corenav_test_dir,
 \    "sync.functional-sync-tests": g:hds_corenav_test_dir,
@@ -80,6 +89,11 @@ endfunction
 
 function! ListKnownTargets(arg_lead, cmd_line, cursor_pos)
     return join(keys(g:hds_test_dirs), "\n")
+endfunction
+
+function! ListKnownBuildTargets(arg_lead, cmd_line, cursor_pos)
+    return join(g:hds_build_only_targets, "\n") . "\n" .
+\       ListKnownTargets(a:arg_lead, a:cmd_line, a:cursor_pos)
 endfunction
 
 function! ListKnownTestTargets(arg_lead, cmd_line, cursor_pos)
@@ -156,7 +170,7 @@ endfunction
 
 command! -nargs=*   Cmake        call Cmake(<q-args>)
 command!            CmakeLast    call Cmake("")
-command! -complete=custom,ListKnownTargets -nargs=*   Build        call Build(<q-args>, 0)
+command! -complete=custom,ListKnownBuildTargets -nargs=*   Build        call Build(<q-args>, 0)
 command!            BuildLast    call Build(<q-args>, 1)
 command! -complete=custom,ListKnownTestTargets -nargs=*   Test         call Test(<q-args>, 0)
 command!            TestLast     call Test(<q-args>, 1)
