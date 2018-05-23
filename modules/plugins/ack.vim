@@ -9,7 +9,4 @@ function! FindInProject(term)
     call ack#Ack("grep", a:term)
 endfunction
 
-" Use K to search for the word under the cursor
-nnoremap K :call FindInProject("<C-R><C-W>")<CR>
-
 
