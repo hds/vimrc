@@ -12,7 +12,7 @@ set colorcolumn=100
 let g:clang_format#command = "clang-format-5.0"
 
 if executable('ag')
-    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|sources\|json)$"'
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|sources\|json\|java)$"'
 endif
 
 let $LD_LIBRARY_PATH = $LD_LIBRARY_PATH . ":" . $HOME . "/tmp/navigation/lib"
@@ -20,7 +20,7 @@ let $PYTHONPATH = $HOME . "/tmp/lib/python2.7/dist-packages/here/navigation/navm
 
 " Build for linux
 "set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
-let g:hds_build_cmd = "sparta-build.sh --debug --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DENABLE_OPENGLES3=OFF -DNAVMEMORY_WRAPPER_MODULE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+let g:hds_build_cmd = "sparta-build.sh --debug --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DNAVMEMORY_WRAPPER_MODULE=ON -DFLATBUFFERS_BUILD_FLATC=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
 
 function! CmakeCmd(args)
     let l:cmd = g:hds_build_cmd . " --cmake-only " . a:args
@@ -58,24 +58,30 @@ endfunction
 let g:hds_mib3_integrationtest_dir = g:hds_build_dir . "/mib3t/integration/tests/integrationtests"
 let g:hds_mib3_unittest_dir = g:hds_build_dir . "/mib3t/integration/tests/unittests"
 let g:hds_corenav_test_dir = g:hds_build_dir . "/preinstall-image/share/here/tests"
+let g:hds_navigation_test_dir = g:hds_build_dir . "/preinstall-image/navigation"
 let g:hds_carlo_test_dir = g:hds_build_dir . "/coresdk/carlo/locationsdk/test"
 
 let g:hds_build_only_targets =
 \[
-\   "install_navigation",
+\   "install_navigation_app",
+\   "install_navigation_tests",
 \   "install_test_navigation_wrapper_navmemory_component",
 \   "install-here.mib3t-integration-nav-memory-wrapper",
+\   "sync.storedumper",
 \]
 
 let g:hds_test_dirs =
 \{
-\    "HereNaviNavMemoryIntegrationTests": g:hds_mib3_integrationtest_dir . "/navmemory",
-\    "HereNaviNavMemoryUnitTests": g:hds_mib3_unittest_dir . "/navmemory",
+\    "HereNaviNavMemoryIntegrationTests": g:hds_navigation_test_dir . "/navmemory",
+\    "HereNaviNavMemoryUnitTests": g:hds_navigation_test_dir . "/navmemory",
+\    "HereNaviEvIntegrationTests": g:hds_mib3_integrationtest_dir . "/ev",
+\    "HereNaviRoutingUnitTests": g:hds_mib3_unittest_dir . "/routing",
 \    "HereNaviSearchIntegrationTests": g:hds_mib3_integrationtest_dir . "/search",
 \    "HereNaviSearchUnitTests": g:hds_mib3_unittest_dir . "/search",
 \    "HereNaviSystemIntegrationTests": g:hds_mib3_integrationtest_dir . "/system",
-\    "HereNaviSystemUnitTests": g:hds_mib3_unittest_dir . "/system",
-\    "HereNaviUnitTests": g:hds_mib3_unittest_dir,
+\    "HereNaviSystemUnitTests": g:hds_navigation_test_dir . "/system",
+\    "HereNaviPositioningUnitTests": g:hds_navigation_test_dir . "/positioning",
+\    "os-adaptation-network-test": g:hds_corenav_test_dir,
 \    "sync.functionaltests": g:hds_corenav_test_dir,
 \    "sync.functional-sync-tests": g:hds_corenav_test_dir,
 \    "sync.unittests": g:hds_corenav_test_dir,
@@ -108,7 +114,7 @@ function! ListKnownTestTargets(arg_lead, cmd_line, cursor_pos)
     endif
 endfunction
 
-function! TestCmd(args)
+function! TestCmd(args, debug)
     let l:args_array = split(a:args)
     let l:test = l:args_array[0]
     let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
@@ -116,9 +122,12 @@ function! TestCmd(args)
     if has_key(g:hds_test_dirs, l:test)
         let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
     endif
+    if a:debug
+        let l:cmd = l:cmd . "lldb-6.0 "
+    endif
     let l:cmd = l:cmd . "./" . l:test
     if len(l:filter) > 0
-        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
+        let l:cmd = l:cmd . " -- --gtest_filter=" . l:filter
     endif
 
     return l:cmd
@@ -138,45 +147,40 @@ function! Test(args, use_last)
         return
     endif
 
-    let l:cmd = TestCmd(g:hds_last_test)
-"    let l:args_array = split(g:hds_last_test)
-"    let l:test = l:args_array[0]
-"    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
-"    let l:cmd = "Dispatch "
-"    if has_key(g:hds_test_dirs, l:test)
-"        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
-"    endif
-"    let l:cmd = l:cmd . "./" . l:test
-"    if len(l:filter) > 0
-"        let l:cmd = l:cmd . " --gtest_filter=" . l:filter
-"    endif
+    let l:cmd = TestCmd(g:hds_last_test, 0)
     execute "Dispatch " . l:cmd
 endfunction
 
-function! BuildAndTest()
-    if len(g:hds_last_build) == 0
-        echom "No last build found!"
-        return
+function! Debug(args, use_last)
+    if !a:use_last
+        if len(a:args) == 0
+            echom "No test specified!"
+            return
+        endif
+        let g:hds_last_test = a:args
     endif
+
     if len(g:hds_last_test) == 0
         echom "No last test found!"
         return
     endif
-    let l:build_cmd = BuildCmd(g:hds_last_build)
-    let l:test_cmd = TestCmd(g:hds_last_test)
 
-    execute "Dispatch " . l:build_cmd . " && " . l:test_cmd
+    let l:cmd = TestCmd(g:hds_last_test, 1)
+    execute "Dispatch " . l:cmd
 endfunction
 
 command! -nargs=*   Cmake        call Cmake(<q-args>)
 command!            CmakeLast    call Cmake("")
 command! -complete=custom,ListKnownBuildTargets -nargs=*   Build        call Build(<q-args>, 0)
 command!            BuildLast    call Build(<q-args>, 1)
-command! -complete=custom,ListKnownTestTargets -nargs=*   Test         call Test(<q-args>, 0)
+command! -complete=custom,ListKnownTestTargets -nargs=*    Test         call Test(<q-args>, 0)
 command!            TestLast     call Test(<q-args>, 1)
-command!            BuildAndTest call BuildAndTest()
+command! -complete=custom,ListKnownTestTargets -nargs=*    Debug        call Debug(<q-args>, 0)
+command!            DebugLast     call Debug(<q-args>, 1)
 
 nnoremap <F3> :CmakeLast<CR>
 nnoremap <F4> :BuildLast<CR>
 nnoremap <F5> :TestLast<CR>
-nnoremap <F6> :BuildAndTest<CR>
+nnoremap <F6> :DebugLast<CR>
+
+nnoremap <leader>c :copen<CR>G

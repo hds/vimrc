@@ -8,3 +8,13 @@ augroup END
 
 set nocursorline
 setlocal nocursorline
+
+function CreateScratch()
+    new
+    setlocal buftype=nofile
+    setlocal bufhidden=hide
+    setlocal noswapfile
+endfunction
+
+command Scratch call CreateScratch()
+
