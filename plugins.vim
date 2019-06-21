@@ -19,7 +19,7 @@ Plug 'mileszs/ack.vim'
 Plug 'Valloric/YouCompleteMe', { 'do': './install.py --clang-completer --tern-completer' }
 
 " Find usage and other jump to definition (for C/C++ only)
-Plug 'lyuts/vim-rtags'
+"Plug 'lyuts/vim-rtags'
 
 " Simple file tree
 Plug 'tpope/vim-vinegar'
