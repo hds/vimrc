@@ -1,0 +1,184 @@
+
+let g:hds_repo_dir = g:localvimrc_script_dir_unresolved
+let g:hds_build_dir = g:localvimrc_script_dir_unresolved . "/../build/traffic_server"
+
+" Set YCM conf script
+let g:ycm_global_ycm_extra_conf = g:hds_repo_dir . "/.ycm.py"
+let g:ycm_autoclose_preview_window_after_completion = 0
+
+" All HERE code uses 100 character lines
+set colorcolumn=100
+
+let g:clang_format#command = "clang-format-5.0"
+
+if executable('ag')
+    let g:ackprg = 'ag --vimgrep -G ".(cpp\|h\|hpp\|hxx\|inl\|py\|txt\|cmake\|sources\|json\|java)$"'
+endif
+
+let $LD_LIBRARY_PATH = $LD_LIBRARY_PATH . ":" . $HOME . "/tmp/navigation/lib"
+let $PYTHONPATH = $HOME . "/tmp/lib/python2.7/dist-packages/here/navigation/navmemory"
+
+let g:hds_cmake_cmd = "cmake -G Ninja -DCMAKE_USE_CCACHE=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_BUILD_TYPE=Debug -DBOOTSTRAP_PRODUCT=traffic_server ../../traffic_server"
+let g:hds_build_cmd = "ninja"
+" Build for linux
+"set makeprg=cmake-build.sh\ --target=linux\ --ninja\ --jobs=64\ --repo=${HOME}/olympia/repo\ --build=${HOME}/olympia/build/v-ninja\ -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+"let g:hds_build_cmd = "sparta-build.sh --debug --target=mib3t-x86 --ninja --repo=$HOME/here/sparta --build=$HOME/here/build/sparta-x86 -DNAVMEMORY_WRAPPER_MODULE=ON -DFLATBUFFERS_BUILD_FLATC=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=1"
+
+function! CmakeCmd(args)
+    let l:cmd = g:hds_cmake_cmd . " " . a:args
+    return l:cmd
+endfunction
+
+function! Cmake(args)
+    let l:cmd = CmakeCmd(a:args)
+    execute "Dispatch " . "cd " . g:hds_build_dir . " && " . l:cmd
+endfunction
+
+function! BuildCmd(args)
+    let l:cmd = g:hds_build_cmd . " " . a:args
+    return l:cmd
+endfunction
+
+function! Build(targets, use_last)
+    if !a:use_last
+        if a:targets == ""
+            echom "No target specified!"
+            return
+        endif
+        let g:hds_last_build = a:targets
+    endif
+
+    if len(g:hds_last_build) == 0
+        echom "No last build found!"
+        return
+    endif
+
+    let l:cmd = BuildCmd(g:hds_last_build)
+    execute "Dispatch " . l:cmd
+endfunction
+
+let g:hds_mib3_integrationtest_dir = g:hds_build_dir . "/mib3t/integration/tests/integrationtests"
+let g:hds_mib3_unittest_dir = g:hds_build_dir . "/mib3t/integration/tests/unittests"
+let g:hds_corenav_test_dir = g:hds_build_dir . "/preinstall-image/share/here/tests"
+let g:hds_navigation_test_dir = g:hds_build_dir . "/preinstall-image/navigation"
+let g:hds_carlo_test_dir = g:hds_build_dir . "/coresdk/carlo/locationsdk/test"
+
+let g:hds_build_only_targets =
+\[
+\   "traffic-server-ci",
+\]
+
+let g:hds_test_dirs =
+\{
+\    "HereNaviNavMemoryIntegrationTests": g:hds_navigation_test_dir . "/navmemory",
+\    "HereNaviNavMemoryUnitTests": g:hds_navigation_test_dir . "/navmemory",
+\    "HereNaviEvIntegrationTests": g:hds_mib3_integrationtest_dir . "/ev",
+\    "HereNaviRoutingUnitTests": g:hds_mib3_unittest_dir . "/routing",
+\    "HereNaviSearchIntegrationTests": g:hds_mib3_integrationtest_dir . "/search",
+\    "HereNaviSearchUnitTests": g:hds_mib3_unittest_dir . "/search",
+\    "HereNaviSystemIntegrationTests": g:hds_mib3_integrationtest_dir . "/system",
+\    "HereNaviSystemUnitTests": g:hds_navigation_test_dir . "/system",
+\    "HereNaviPositioningUnitTests": g:hds_navigation_test_dir . "/positioning",
+\    "os-adaptation-network-test": g:hds_corenav_test_dir,
+\    "sync.functionaltests": g:hds_corenav_test_dir,
+\    "sync.functional-sync-tests": g:hds_corenav_test_dir,
+\    "sync.unittests": g:hds_corenav_test_dir,
+\    "carlo_unit_profile": g:hds_carlo_test_dir . "/unit",
+\}
+
+function! ListTargets(arg_lead, cmd_line, cursor_pos)
+    let l:cmd = "cd " . g:hds_build_dir . " && " . "ninja -t targets all | grep -v '/' | awk -F: '{print $1}'"
+    return system(l:cmd)
+endfunction
+
+function! ListKnownTargets(arg_lead, cmd_line, cursor_pos)
+    return join(keys(g:hds_test_dirs), "\n")
+endfunction
+
+function! ListKnownBuildTargets(arg_lead, cmd_line, cursor_pos)
+    return join(g:hds_build_only_targets, "\n") . "\n" .
+\       ListKnownTargets(a:arg_lead, a:cmd_line, a:cursor_pos)
+endfunction
+
+function! ListKnownTestTargets(arg_lead, cmd_line, cursor_pos)
+    let l:first_part = strpart(a:cmd_line, 0, a:cursor_pos)
+    let l:left_parts = split(l:first_part)
+    let l:last_char = strpart(a:cmd_line, a:cursor_pos-1, 1)
+
+    if len(l:left_parts) <= 2 && l:last_char != " "
+        return ListKnownTargets(a:arg_lead, a:cmd_line, a:cursor_pos)
+    else
+        return "mog\ngom"
+    endif
+endfunction
+
+function! TestCmd(args, debug)
+    let l:args_array = split(a:args)
+    let l:test = l:args_array[0]
+    let l:filter = join(l:args_array[1:len(l:args_array)-1], ':')
+    let l:cmd = ""
+    if has_key(g:hds_test_dirs, l:test)
+        let l:cmd .= "cd " . g:hds_test_dirs[l:test] . " && "
+    endif
+    if a:debug
+        let l:cmd = l:cmd . "lldb-6.0 "
+    endif
+    let l:cmd = l:cmd . "./" . l:test
+    if len(l:filter) > 0
+        let l:cmd = l:cmd . " -- --gtest_filter=" . l:filter
+    endif
+
+    return l:cmd
+endfunction
+
+function! Test(args, use_last)
+    if !a:use_last
+        if len(a:args) == 0
+            echom "No test specified!"
+            return
+        endif
+        let g:hds_last_test = a:args
+    endif
+
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+
+    let l:cmd = TestCmd(g:hds_last_test, 0)
+    execute "Dispatch " . l:cmd
+endfunction
+
+function! Debug(args, use_last)
+    if !a:use_last
+        if len(a:args) == 0
+            echom "No test specified!"
+            return
+        endif
+        let g:hds_last_test = a:args
+    endif
+
+    if len(g:hds_last_test) == 0
+        echom "No last test found!"
+        return
+    endif
+
+    let l:cmd = TestCmd(g:hds_last_test, 1)
+    execute "Dispatch " . l:cmd
+endfunction
+
+command! -nargs=*   Cmake        call Cmake(<q-args>)
+command!            CmakeLast    call Cmake("")
+command! -complete=custom,ListKnownBuildTargets -nargs=*   Build        call Build(<q-args>, 0)
+command!            BuildLast    call Build(<q-args>, 1)
+command! -complete=custom,ListKnownTestTargets -nargs=*    Test         call Test(<q-args>, 0)
+command!            TestLast     call Test(<q-args>, 1)
+command! -complete=custom,ListKnownTestTargets -nargs=*    Debug        call Debug(<q-args>, 0)
+command!            DebugLast     call Debug(<q-args>, 1)
+
+nnoremap <F3> :CmakeLast<CR>
+nnoremap <F4> :BuildLast<CR>
+nnoremap <F5> :TestLast<CR>
+nnoremap <F6> :DebugLast<CR>
+
+nnoremap <leader>c :copen<CR>G
