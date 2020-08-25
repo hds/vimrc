@@ -36,6 +36,7 @@ Plug 'ntpeters/vim-better-whitespace'
 
 " Language plugins
 Plug 'zchee/vim-flatbuffers'
+Plug 'cespare/vim-toml'
 
 " Javascript
 Plug 'pangloss/vim-javascript'
