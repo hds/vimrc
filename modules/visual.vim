@@ -1,4 +1,7 @@
 
+" All HERE code uses 100 character lines
+set colorcolumn=100
+
 " Highlight line the cursor is on (but only in the active window)
 augroup CursorLineOnlyInActiveWindow
   autocmd!
