@@ -22,8 +22,6 @@ Let's build Vim 8 from source since it doesn't come preinstall on macOS. These i
                 --enable-multibyte \
                 --enable-rubyinterp=yes \
                 --enable-pythoninterp=yes \
-                --with-python-config-dir=/usr/lib/python2.7/config \
-                --enable-perlinterp=yes \
                 --enable-luainterp=yes \
                 --enable-cscope \
                 --prefix=/usr/local
